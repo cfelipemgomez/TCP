@@ -1,0 +1,2 @@
+para ssl\t:\t gcc -Wall client.c -o client -L/usr/lib -lssl -lcrypto
+para normal\t:\t gcc -Wall client.c -o client
