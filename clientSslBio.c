@@ -3,11 +3,13 @@
  int main(int count, char *strings[])
 {
  BIO *cbio, *out;
+ BIO_ADDR *addr;
  int len;
  char tmpbuf[1024];
 
  cbio = BIO_new_connect("localhost:tcp");
  BIO_set_conn_port(cbio, htons(1099));
+ 
  BIO_set_conn_address(cbio, BIO_ADDR *addr);
  BIO_set_conn_ip_family(cbio, AF_INET);
  out = BIO_new_fp(stdout, BIO_NOCLOSE);

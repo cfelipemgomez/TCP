@@ -3,7 +3,7 @@
 #include <stdlib.h> 
 #include <string.h> 
 #include <sys/socket.h> 
-#include <openssl/bio.h>
+//#include <openssl/bio.h>
 //#include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -15,8 +15,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #define FAIL    -1
-#define MAX 300 
-#define PORT 1099 
+//#define MAX 300 
+//#define PORT 1099 
 
 int OpenConnection(const char *hostname, int port)
 {
@@ -84,6 +84,7 @@ int main(int count, char *strings[])
     char acClientRequest[1024];
     int bytes;
     char *hostname, *portnum;
+    size_t size_send = 0;
     if ( count != 3 )
     {
         printf("usage: %s <hostname> <portnum>\n", strings[0]);
@@ -104,14 +105,15 @@ int main(int count, char *strings[])
         printf("\n\nConnected with %s encryption\n", SSL_get_cipher(ssl));        
         printf("Enter data to send : ");
         scanf("%s",acClientRequest);
-        SSL_write(ssl,acClientRequest, strlen(acClientRequest));   /* encrypt & send message */
-        flush();
+        SSL_write_ex(ssl,acClientRequest, strlen(acClientRequest), &size_send);   /* encrypt & send message */
+        printf("\nFueron enviados %ld datos\n",size_send);
+        //flush();
         //printf("Enter data to send : ");
         //scanf("%s",acClientRequest);
         //SSL_write(ssl,acClientRequest, strlen(acClientRequest));   /* encrypt & send message */        
         //SSL_write(ssl,"20191030110309&000000000002&3CC6&INIT&ACAF7979E4AF8D3DE4A6F75AC677D5D8&HTTP/1.0", strlen(acClientRequest));   /* encrypt & send message */
         //SSL_write(ssl,"20191030110309&000000000002&3CC6&016F320000000005000000100001000500000010000B00050000001000020005000000100003000500000010000500050000001000F967000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&ACAF7979E4AF8D3DE4A6F75AC677D5D8&HTTP/1.0", strlen(acClientRequest));   /* encrypt & send message */
-        bytes = SSL_read(ssl, buf, sizeof(buf)); /* get reply & decrypt */
+        bytes = SSL_read(ssl, buf, sizeof(buf)); // get reply & decrypt 
         buf[bytes] = 0;
         printf("Received: \"%s\"\n", buf);
         SSL_free(ssl);        /* release connection state */
