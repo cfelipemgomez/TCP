@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>
+        <input type="text" placeholder="ingrese trama base" id="trama-base" style="width: 99%; font-size: 60%;"> <input type="number" id="cantidad-tramas">  
+        <a id="descargas" style="display: block;" download="tramas.csv">descargar</a> 
+        <p id="msg" style="font-size: 60%;" ></p>       
+    </div>    
+
+    <script>
+            window.onload = function (e) {
+                document.getElementById('trama-base').value = '20191030110309&0004A3FB85D9&3CC6&016F320000000005000000100001000500000010000B00050000001000020005000000100003000500000010000500050000001000F967000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&ACAF7979E4AF8D3DE4A6F75AC677D5D8&HTTP/1.0';                
+                document.getElementById('cantidad-tramas').value = 10;
+                calcularTramas();
+            }
+            document.addEventListener('keyup', event => {calcularTramas();});
+
+            function calcularTramas(){
+                const tramaOriginal = document.getElementById('trama-base').value;
+                const cantidadTramas = document.getElementById('cantidad-tramas').value;
+                const trama_base_p1 = tramaOriginal.split('&')[0]+'&';
+                const trama_base_p2 = '&'+tramaOriginal.split('&').slice(2).join('&');                
+                const macs = Array.from(Array(parseInt(cantidadTramas)).keys(), mac => mac.toString());
+                const tramas = [];
+                macs
+                    .map(mac => to12digit(mac))
+                    .map(mac12 =>
+                        tramas.push(trama_base_p1.concat(mac12).concat(trama_base_p2))
+                    );
+                document.getElementById('msg').innerText = tramas.join('\n');
+        
+                let csvContent = "data:text/csv;charset=utf-8," + tramas.join("\n");
+        
+                var encodedUri = encodeURI(csvContent);
+                var link = document.getElementById('descargas');
+                link.setAttribute("href", encodedUri);
+                //link.click();
+            }
+            function to12digit(numero) {
+              return numero.length < 12 ? to12digit("0" + numero) : numero;
+            }
+          </script>    
+  </body>
+</html>
