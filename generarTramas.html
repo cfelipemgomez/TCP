@@ -7,33 +7,59 @@
     <title>Document</title>
   </head>
   <body>
-    <div>
-        <input type="text" placeholder="ingrese trama base" id="trama-base" style="width: 99%; font-size: 60%;"> <input type="number" id="cantidad-tramas">  
+    <input type="number" id="cantidad-tramas">  
+    <div id="generadorQueries">
+        <button onclick="document.getElementById('generadorQueries').style.display = 'none';document.getElementById('generadorTramas').style.display = 'block';">GenerarTramas</button>
+        <p id="msgQueries" style="font-size: 60%;" ></p>
+    </div>
+    <div id="generadorTramas">
+        <button onclick="document.getElementById('generadorQueries').style.display = 'block';document.getElementById('generadorTramas').style.display = 'none';">GenerarQueries</button>
+        <input type="text" placeholder="ingrese trama base" id="trama-base" style="width: 99%; font-size: 60%;">
         <a id="descargas" style="display: block;" download="tramas.csv">descargar</a> 
-        <p id="msg" style="font-size: 60%;" ></p>       
+        <p id="msgTramas" style="font-size: 60%;" ></p>       
     </div>    
 
     <script>
+            //"SELECT * FROM fn_crear_dispositivo('0001', '000000000001', '192.168.0.1', 10001);";
+            const queryBase = ["SELECT * FROM fn_crear_dispositivo('","', '","', '","', ",");"];
             window.onload = function (e) {
+                document.getElementById('generadorQueries').style.display = 'none';
                 document.getElementById('trama-base').value = '20191030110309&0004A3FB85D9&3CC6&016F320000000005000000100001000500000010000B00050000001000020005000000100003000500000010000500050000001000F967000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&ACAF7979E4AF8D3DE4A6F75AC677D5D8&HTTP/1.0';                
                 document.getElementById('cantidad-tramas').value = 10;
                 calcularTramas();
+                calcularQueries();
             }
-            document.addEventListener('keyup', event => {calcularTramas();});
+            document.addEventListener('keyup', event => {calcularTramas();calcularQueries();});
+
+            function getNumsBase(){
+                const cantidadTramas = document.getElementById('cantidad-tramas').value;
+                return  Array.from(Array(parseInt(cantidadTramas)).keys(), numBase =>{numBase++; return numBase.toString();});
+            }
+
+            function calcularQueries() {
+              const ipBase = "192.168.0.";
+              const numsBase = getNumsBase();
+              const queries = [];
+              numsBase.forEach(numBase => {
+                const mac = toNdigit(numBase, 12);
+                const serial = toNdigit(numBase, 4);
+                const query = queryBase[0].concat(serial).concat(queryBase[1]).concat(mac).concat(queryBase[2]).concat(ipBase+numBase).concat(queryBase[3]).concat(1+serial).concat(queryBase[4]);
+                queries.push(query);
+              });
+              document.getElementById('msgQueries').innerText = queries.join('\n');
+            }
 
             function calcularTramas(){
                 const tramaOriginal = document.getElementById('trama-base').value;
-                const cantidadTramas = document.getElementById('cantidad-tramas').value;
-                const trama_base_p1 = tramaOriginal.split('&')[0]+'&';
-                const trama_base_p2 = '&'+tramaOriginal.split('&').slice(2).join('&');                
-                const macs = Array.from(Array(parseInt(cantidadTramas)).keys(), mac => mac.toString());
+                const tramaBase = [tramaOriginal.split('&')[0]+'&', '&'+tramaOriginal.split('&').slice(2).join('&')];
+                const numsBase = getNumsBase();
                 const tramas = [];
-                macs
-                    .map(mac => to12digit(mac))
-                    .map(mac12 =>
-                        tramas.push(trama_base_p1.concat(mac12).concat(trama_base_p2))
-                    );
-                document.getElementById('msg').innerText = tramas.join('\n');
+                numsBase.forEach(numBase => {
+                        const mac = toNdigit(numBase, 12);
+                        const trama = tramaBase[0].concat(mac).concat(tramaBase[1]);
+                        tramas.push(trama);
+                    });
+                document.getElementById('msgTramas').innerText = tramas.join('\n');
         
                 let csvContent = "data:text/csv;charset=utf-8," + tramas.join("\n");
         
@@ -42,8 +68,8 @@
                 link.setAttribute("href", encodedUri);
                 //link.click();
             }
-            function to12digit(numero) {
-              return numero.length < 12 ? to12digit("0" + numero) : numero;
+            function toNdigit(numero, n) {
+              return numero.length < n ? toNdigit("0" + numero, n) : numero;
             }
           </script>    
   </body>
