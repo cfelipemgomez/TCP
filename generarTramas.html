@@ -22,18 +22,38 @@
     <script>
             //"SELECT * FROM fn_crear_dispositivo('0001', '000000000001', '192.168.0.1', 10001);";
             const queryBase = ["SELECT * FROM fn_crear_dispositivo('","', '","', '","', ",");"];
+            let dateStr;
+            let cantidadTramas;
+            const tramaIds = getCantidadNumsBase(4).map(numBase => toNdigit(numBase, 4));
+            const INIT = '&INIT'
             window.onload = function (e) {
+              dateStr = getDateStr(new Date());
                 document.getElementById('generadorQueries').style.display = 'none';
-                document.getElementById('trama-base').value = '20191030110309&0004A3FB85D9&3CC6&016F320000000005000000100001000500000010000B00050000001000020005000000100003000500000010000500050000001000F967000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&ACAF7979E4AF8D3DE4A6F75AC677D5D8&HTTP/1.0';                
+                document.getElementById('trama-base').value = 'echo -e "'+dateStr+'&000000000000&0000&016F320000000005000000100001000500000010000B00050000001000020005000000100003000500000010000500050000001000F967000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&0ABEFB86C1E41D3AAB076FFE7E454BF6&HTTP/1.0" | openssl s_client -connect localhost:1099';                
                 document.getElementById('cantidad-tramas').value = 10;
                 calcularTramas();
                 calcularQueries();
             }
             document.addEventListener('keyup', event => {calcularTramas();calcularQueries();});
 
+            function getDateStr(date) {
+                const tramaDate = [];
+                tramaDate.push(date.getFullYear());
+                tramaDate.push(date.getMonth()+1);
+                tramaDate.push(date.getDate());
+                tramaDate.push(date.getHours());
+                tramaDate.push(date.getMinutes());
+                tramaDate.push(date.getSeconds());
+                return Array.from(tramaDate, num => toNdigit(num.toString(), 2)).join('');
+            }
+
             function getNumsBase(){
-                const cantidadTramas = document.getElementById('cantidad-tramas').value;
-                return  Array.from(Array(parseInt(cantidadTramas)).keys(), numBase =>{numBase++; return numBase.toString();});
+                cantidadTramas = document.getElementById('cantidad-tramas').value;
+                return getCantidadNumsBase(cantidadTramas);
+            }
+
+            function getCantidadNumsBase(cantidad) {
+              return  Array.from(Array(parseInt(cantidad)).keys(), numBase =>{numBase++; return numBase.toString();});
             }
 
             function calcularQueries() {
@@ -51,17 +71,28 @@
 
             function calcularTramas(){
                 const tramaOriginal = document.getElementById('trama-base').value;
-                const tramaBase = [tramaOriginal.split('&')[0]+'&', '&'+tramaOriginal.split('&').slice(2).join('&')];
+                const tramaBase = [tramaOriginal.split('&')[0]+'&','&', '&'+tramaOriginal.split('&')[3],'&'+tramaOriginal.split('&').slice(4).join('&')];
                 const numsBase = getNumsBase();
+                const tramasInit = [];
                 const tramas = [];
                 numsBase.forEach(numBase => {
                         const mac = toNdigit(numBase, 12);
-                        const trama = tramaBase[0].concat(mac).concat(tramaBase[1]);
+                        const tramaInit = tramaBase[0].concat(mac).concat(tramaBase[1]).concat(tramaIds[0]).concat(INIT).concat(tramaBase[3]);
+                        tramasInit.push(tramaInit);
+                        const trama = tramaBase[0].concat(mac).concat(tramaBase[1]).concat(tramaIds[1]).concat(tramaBase[2]).concat(tramaBase[3]);
                         tramas.push(trama);
                     });
-                document.getElementById('msgTramas').innerText = tramas.join('\n');
+
+                const flujosTramas = [];                    
+                for (let index = 0; index < cantidadTramas; index++) {
+                  const flujoTramas = [];
+                  flujoTramas.push(tramasInit[index]);
+                  flujoTramas.push(tramas[index]);
+                  flujosTramas.push(flujoTramas.join(' ; '));
+                }
+                document.getElementById('msgTramas').innerText = flujosTramas.join('\n');
         
-                let csvContent = "data:text/csv;charset=utf-8," + tramas.join("\n");
+                let csvContent = "data:text/csv;charset=utf-8," + flujosTramas.join("\n");
         
                 var encodedUri = encodeURI(csvContent);
                 var link = document.getElementById('descargas');
